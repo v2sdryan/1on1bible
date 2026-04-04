@@ -783,21 +783,37 @@
 
       async function 取經文回應(查詢) {
         const 直連網址 = `https://bible.fhl.net/json/qsb.php?qstr=${encodeURIComponent(查詢)}&version=unv&gb=0`;
-        const 後備網址 = `https://api.allorigins.win/raw?url=${encodeURIComponent(直連網址)}`;
-        const 清單 = [直連網址, 後備網址];
+        const 清單 = [
+          { 名稱: '直連', 網址: 直連網址, 格式: 'json' },
+          { 名稱: 'allorigins-raw', 網址: `https://api.allorigins.win/raw?url=${encodeURIComponent(直連網址)}`, 格式: 'json' },
+          { 名稱: 'allorigins-get', 網址: `https://api.allorigins.win/get?url=${encodeURIComponent(直連網址)}`, 格式: 'allorigins-get' },
+          { 名稱: 'corsproxy', 網址: `https://corsproxy.io/?${encodeURIComponent(直連網址)}`, 格式: 'json' },
+          { 名稱: 'isomorphic', 網址: `https://cors.isomorphic-git.org/${直連網址}`, 格式: 'json' },
+        ];
         let 最後錯誤 = '';
 
-        for (const 網址 of 清單) {
+        for (const 來源 of 清單) {
           try {
-            const 回應 = await fetch(網址);
+            const 控制器 = new AbortController();
+            const 計時 = setTimeout(() => 控制器.abort(), 8000);
+            const 回應 = await fetch(來源.網址, { signal: 控制器.signal });
+            clearTimeout(計時);
+
             if (!回應.ok) {
-              throw new Error(`HTTP ${回應.status}`);
+              throw new Error(`${來源.名稱} HTTP ${回應.status}`);
             }
 
             const 文字 = await 回應.text();
-            const 資料回應 = JSON.parse(文字);
-            if (資料回應 && Array.isArray(資料回應.record)) {
-              return 資料回應;
+            const 資料回應 = 來源.格式 === 'allorigins-get'
+              ? JSON.parse(文字)
+              : JSON.parse(文字);
+
+            const 真正資料 = 來源.格式 === 'allorigins-get'
+              ? JSON.parse(資料回應.contents || '{}')
+              : 資料回應;
+
+            if (真正資料 && Array.isArray(真正資料.record)) {
+              return 真正資料;
             }
 
             throw new Error('回應格式不正確');

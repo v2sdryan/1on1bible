@@ -372,6 +372,14 @@
         border-color: rgba(180, 35, 24, 0.18);
       }
 
+      .卡片全文容器 {
+        margin-top: 8px;
+      }
+
+      .卡片全文容器 .全文經文區 {
+        margin-top: 0;
+      }
+
       .詳情區塊 .細字 {
         display: block;
         margin-bottom: 6px;
@@ -773,59 +781,91 @@
         `;
       }
 
+      async function 取經文回應(查詢) {
+        const 直連網址 = `https://bible.fhl.net/json/qsb.php?qstr=${encodeURIComponent(查詢)}&version=unv&gb=0`;
+        const 後備網址 = `https://api.allorigins.win/raw?url=${encodeURIComponent(直連網址)}`;
+        const 清單 = [直連網址, 後備網址];
+        let 最後錯誤 = '';
+
+        for (const 網址 of 清單) {
+          try {
+            const 回應 = await fetch(網址);
+            if (!回應.ok) {
+              throw new Error(`HTTP ${回應.status}`);
+            }
+
+            const 文字 = await 回應.text();
+            const 資料回應 = JSON.parse(文字);
+            if (資料回應 && Array.isArray(資料回應.record)) {
+              return 資料回應;
+            }
+
+            throw new Error('回應格式不正確');
+          } catch (錯誤) {
+            最後錯誤 = 錯誤 instanceof Error ? 錯誤.message : '未知錯誤';
+          }
+        }
+
+        throw new Error(最後錯誤 || '載入失敗');
+      }
+
       function 顯示經文載入中() {
         const 容器 = document.getElementById('全文經文容器');
         if (!容器) return;
         容器.innerHTML = '<div class="經文載入">載入全文經文中...</div>';
       }
 
-      async function 載入全文經文(索引) {
+      async function 取得全文經文資料(索引) {
         const 項 = 資料[索引];
-        if (!項) return;
-
-        const 容器 = document.getElementById('全文經文容器');
-        if (!容器) return;
+        if (!項) return [];
 
         const 解析 = 解析經文引用(項.經文);
         if (!解析) {
-          容器.innerHTML = '<div class="經文錯誤">無法解析經文引用。</div>';
-          return;
+          throw new Error('無法解析經文引用');
         }
 
         狀態.全文索引 = 索引;
 
         const 快取資料 = 經文快取.get(項.經文);
         if (快取資料) {
-          容器.innerHTML = 轉換成頁面顯示(快取資料, 項.經文);
-          綁定全文朗讀(項);
-          return;
+          return 快取資料;
         }
+
+        const 所有節 = [];
+        for (const 區段 of 解析.區段) {
+          const 查詢 = 組合經文查詢(解析, 區段);
+          const 資料回應 = await 取經文回應(查詢);
+          if (資料回應 && Array.isArray(資料回應.record)) {
+            所有節.push(...資料回應.record);
+          }
+        }
+
+        if (!所有節.length) {
+          throw new Error('搵唔到對應全文經文');
+        }
+
+        經文快取.set(項.經文, 所有節);
+        return 所有節;
+      }
+
+      async function 載入全文經文到容器(索引, 容器ID) {
+        const 項 = 資料[索引];
+        const 容器 = document.getElementById(容器ID);
+        if (!項 || !容器) return;
 
         容器.innerHTML = '<div class="經文載入">載入全文經文中...</div>';
 
         try {
-          const 所有節 = [];
-          for (const 區段 of 解析.區段) {
-            const 查詢 = 組合經文查詢(解析, 區段);
-            const 回應 = await fetch(`https://bible.fhl.net/json/qsb.php?qstr=${encodeURIComponent(查詢)}&version=unv&gb=0`);
-            const 資料回應 = await 回應.json();
-
-            if (資料回應 && Array.isArray(資料回應.record)) {
-              所有節.push(...資料回應.record);
-            }
-          }
-
-          if (!所有節.length) {
-            容器.innerHTML = '<div class="經文錯誤">搵唔到對應全文經文。</div>';
-            return;
-          }
-
-          經文快取.set(項.經文, 所有節);
-          容器.innerHTML = 轉換成頁面顯示(所有節, 項.經文);
+          const 經文資料 = await 取得全文經文資料(索引);
+          容器.innerHTML = 轉換成頁面顯示(經文資料, 項.經文);
           綁定全文朗讀(項);
-        } catch (錯誤) {
-          容器.innerHTML = '<div class="經文錯誤">無法載入全文經文，請稍後再試。</div>';
+        } catch {
+          容器.innerHTML = '<div class="經文錯誤">無法載入全文經文，已自動切換後備來源仍未成功，請稍後再試。</div>';
         }
+      }
+
+      function 在卡片顯示全文(索引) {
+        載入全文經文到容器(索引, `卡片全文容器-${索引}`);
       }
 
       function 綁定全文朗讀(項) {
@@ -872,6 +912,7 @@
                         <input type="checkbox" ${已讀(索引) ? 'checked' : ''} data-checkbox="${索引}" />
                         <span>標示已讀</span>
                       </label>
+                      ${狀態.選中 === 索引 ? `<div class="卡片全文容器" id="卡片全文容器-${索引}"><div class="經文載入">載入全文經文中...</div></div>` : ''}
                     </article>
                   `;
                 }).join('')}
@@ -950,7 +991,7 @@
         停止朗讀.addEventListener('click', 停止朗讀聲音);
         全文經文按鈕.addEventListener('click', () => {
           顯示經文載入中();
-          載入全文經文(索引);
+          載入全文經文到容器(索引, '全文經文容器');
         });
 
         詳情容器.querySelectorAll('[data-跳轉]').forEach((按鈕) => {
@@ -958,7 +999,7 @@
         });
 
         if (狀態.全文索引 === 索引) {
-          載入全文經文(索引);
+          載入全文經文到容器(索引, '全文經文容器');
         }
       }
 
@@ -968,6 +1009,7 @@
         儲存進度();
         渲染();
         顯示詳情(索引);
+        在卡片顯示全文(索引);
       }
 
       function 停止朗讀聲音() {
@@ -1023,11 +1065,21 @@
         更新統計();
 
         月份容器.querySelectorAll('.日卡').forEach((卡) => {
-          卡.addEventListener('click', () => 顯示詳情(Number(卡.dataset.索引)));
+          卡.addEventListener('click', () => {
+            const 索引 = Number(卡.dataset.索引);
+            狀態.選中 = 索引;
+            渲染();
+            顯示詳情(索引);
+            在卡片顯示全文(索引);
+          });
           卡.addEventListener('keydown', (事件) => {
             if (事件.key === 'Enter' || 事件.key === ' ') {
               事件.preventDefault();
-              顯示詳情(Number(卡.dataset.索引));
+              const 索引 = Number(卡.dataset.索引);
+              狀態.選中 = 索引;
+              渲染();
+              顯示詳情(索引);
+              在卡片顯示全文(索引);
             }
           });
         });
@@ -1066,6 +1118,7 @@
 
       渲染();
       顯示詳情(0);
+      在卡片顯示全文(0);
     </script>
   </body>
 </html>

@@ -857,12 +857,29 @@
           return 聖經資料快取;
         }
 
-        const 回應 = await fetch('ChiUn%20(1).json');
-        if (!回應.ok) {
-          throw new Error('本地聖經資料檔無法讀取');
+        const 候選檔名 = ['chiun.json', 'ChiUn.json', 'ChiUn%20(1).json', 'ChiUn (1).json'];
+        let 原始 = null;
+        let 最後錯誤 = '';
+
+        for (const 檔名 of 候選檔名) {
+          try {
+            const 回應 = await fetch(檔名);
+            if (!回應.ok) {
+              最後錯誤 = `${檔名} HTTP ${回應.status}`;
+              continue;
+            }
+
+            原始 = await 回應.json();
+            break;
+          } catch (錯誤) {
+            最後錯誤 = 錯誤 instanceof Error ? 錯誤.message : '未知錯誤';
+          }
         }
 
-        const 原始 = await 回應.json();
+        if (!原始) {
+          throw new Error(`本地聖經資料檔無法讀取：${最後錯誤}`);
+        }
+
         const 索引 = new Map();
 
         for (const 書卷 of (原始.books || [])) {

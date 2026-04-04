@@ -1,0 +1,1 @@
+window.SCRIPTURE_DATA = {};

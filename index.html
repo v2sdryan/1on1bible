@@ -784,6 +784,7 @@
       async function 取經文回應(查詢) {
         const 直連網址 = `https://bible.fhl.net/json/qsb.php?qstr=${encodeURIComponent(查詢)}&version=unv&gb=0`;
         const 清單 = [
+          { 名稱: '本站代理', 網址: `/api/scripture?q=${encodeURIComponent(查詢)}`, 格式: 'json' },
           { 名稱: '直連', 網址: 直連網址, 格式: 'json' },
           { 名稱: 'allorigins-raw', 網址: `https://api.allorigins.win/raw?url=${encodeURIComponent(直連網址)}`, 格式: 'json' },
           { 名稱: 'allorigins-get', 網址: `https://api.allorigins.win/get?url=${encodeURIComponent(直連網址)}`, 格式: 'allorigins-get' },

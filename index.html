@@ -636,6 +636,7 @@
 
       const 進度鍵 = '讀經進度-v1';
       const 經文快取 = new Map();
+      let 聖經資料快取 = null;
       const 狀態 = {
         選中: 0,
         已讀: 讀取進度(),
@@ -680,6 +681,75 @@
         '約翰三書': '約三',
         '猶大書': '猶',
         '啟示錄': '啟',
+      };
+
+      const JSON書卷對照 = {
+        '創世記': 'Genesis',
+        '出埃及記': 'Exodus',
+        '利未記': 'Leviticus',
+        '民數記': 'Numbers',
+        '申命記': 'Deuteronomy',
+        '約書亞記': 'Joshua',
+        '士師記': 'Judges',
+        '路得記': 'Ruth',
+        '撒母耳記上': 'I Samuel',
+        '撒母耳記下': 'II Samuel',
+        '列王紀上': 'I Kings',
+        '列王紀下': 'II Kings',
+        '歷代志上': 'I Chronicles',
+        '歷代志下': 'II Chronicles',
+        '以斯拉記': 'Ezra',
+        '尼希米記': 'Nehemiah',
+        '以斯帖記': 'Esther',
+        '約伯記': 'Job',
+        '詩篇': 'Psalms',
+        '箴言': 'Proverbs',
+        '傳道書': 'Ecclesiastes',
+        '雅歌': 'Song of Solomon',
+        '以賽亞書': 'Isaiah',
+        '耶利米書': 'Jeremiah',
+        '耶利米哀歌': 'Lamentations',
+        '以西結書': 'Ezekiel',
+        '但以理書': 'Daniel',
+        '何西阿書': 'Hosea',
+        '約珥書': 'Joel',
+        '阿摩司書': 'Amos',
+        '俄巴底亞書': 'Obadiah',
+        '約拿書': 'Jonah',
+        '彌迦書': 'Micah',
+        '那鴻書': 'Nahum',
+        '哈巴谷書': 'Habakkuk',
+        '西番雅書': 'Zephaniah',
+        '哈該書': 'Haggai',
+        '撒迦利亞書': 'Zechariah',
+        '瑪拉基書': 'Malachi',
+        '馬太福音': 'Matthew',
+        '馬可福音': 'Mark',
+        '路加福音': 'Luke',
+        '約翰福音': 'John',
+        '使徒行傳': 'Acts',
+        '羅馬書': 'Romans',
+        '哥林多前書': 'I Corinthians',
+        '哥林多後書': 'II Corinthians',
+        '加拉太書': 'Galatians',
+        '以弗所書': 'Ephesians',
+        '腓立比書': 'Philippians',
+        '歌羅西書': 'Colossians',
+        '帖撒羅尼迦前書': 'I Thessalonians',
+        '帖撒羅尼迦後書': 'II Thessalonians',
+        '提摩太前書': 'I Timothy',
+        '提摩太後書': 'II Timothy',
+        '提多書': 'Titus',
+        '腓利門書': 'Philemon',
+        '希伯來書': 'Hebrews',
+        '雅各書': 'James',
+        '彼得前書': 'I Peter',
+        '彼得後書': 'II Peter',
+        '約翰一書': 'I John',
+        '約翰二書': 'II John',
+        '約翰三書': 'III John',
+        '猶大書': 'Jude',
+        '啟示錄': 'Revelation of John',
       };
 
       function 讀取進度() {
@@ -729,6 +799,7 @@
         const 書卷 = 匹配[1].trim();
         const 範圍字串 = 匹配[2].replace(/\s+/g, '');
         const api書卷 = 經文書卷對照[書卷] || 書卷;
+        const json書卷 = JSON書卷對照[書卷] || null;
         const 區段 = 範圍字串.split(',').map((段) => 段.trim()).filter(Boolean).map((段) => {
           const [起點, 終點原] = 段.split('-');
           const [起章, 起節] = 起點.split(':').map((值) => Number(值));
@@ -748,7 +819,7 @@
           return { 起章, 起節, 末章, 末節 };
         });
 
-        return { 書卷, api書卷, 範圍字串, 區段 };
+        return { 書卷, api書卷, json書卷, 範圍字串, 區段 };
       }
 
       function 組合經文查詢(引用, 區段) {
@@ -781,49 +852,29 @@
         `;
       }
 
-      async function 取經文回應(查詢) {
-        const 直連網址 = `https://bible.fhl.net/json/qsb.php?qstr=${encodeURIComponent(查詢)}&version=unv&gb=0`;
-        const 清單 = [
-          { 名稱: '本站代理', 網址: `/api/scripture?q=${encodeURIComponent(查詢)}`, 格式: 'json' },
-          { 名稱: '直連', 網址: 直連網址, 格式: 'json' },
-          { 名稱: 'allorigins-raw', 網址: `https://api.allorigins.win/raw?url=${encodeURIComponent(直連網址)}`, 格式: 'json' },
-          { 名稱: 'allorigins-get', 網址: `https://api.allorigins.win/get?url=${encodeURIComponent(直連網址)}`, 格式: 'allorigins-get' },
-          { 名稱: 'corsproxy', 網址: `https://corsproxy.io/?${encodeURIComponent(直連網址)}`, 格式: 'json' },
-          { 名稱: 'isomorphic', 網址: `https://cors.isomorphic-git.org/${直連網址}`, 格式: 'json' },
-        ];
-        let 最後錯誤 = '';
-
-        for (const 來源 of 清單) {
-          try {
-            const 控制器 = new AbortController();
-            const 計時 = setTimeout(() => 控制器.abort(), 8000);
-            const 回應 = await fetch(來源.網址, { signal: 控制器.signal });
-            clearTimeout(計時);
-
-            if (!回應.ok) {
-              throw new Error(`${來源.名稱} HTTP ${回應.status}`);
-            }
-
-            const 文字 = await 回應.text();
-            const 資料回應 = 來源.格式 === 'allorigins-get'
-              ? JSON.parse(文字)
-              : JSON.parse(文字);
-
-            const 真正資料 = 來源.格式 === 'allorigins-get'
-              ? JSON.parse(資料回應.contents || '{}')
-              : 資料回應;
-
-            if (真正資料 && Array.isArray(真正資料.record)) {
-              return 真正資料;
-            }
-
-            throw new Error('回應格式不正確');
-          } catch (錯誤) {
-            最後錯誤 = 錯誤 instanceof Error ? 錯誤.message : '未知錯誤';
-          }
+      async function 讀取本地聖經資料() {
+        if (聖經資料快取) {
+          return 聖經資料快取;
         }
 
-        throw new Error(最後錯誤 || '載入失敗');
+        const 回應 = await fetch('ChiUn%20(1).json');
+        if (!回應.ok) {
+          throw new Error('本地聖經資料檔無法讀取');
+        }
+
+        const 原始 = await 回應.json();
+        const 索引 = new Map();
+
+        for (const 書卷 of (原始.books || [])) {
+          const 章索引 = new Map();
+          for (const 章 of (書卷.chapters || [])) {
+            章索引.set(Number(章.chapter), 章.verses || []);
+          }
+          索引.set(書卷.name, 章索引);
+        }
+
+        聖經資料快取 = 索引;
+        return 聖經資料快取;
       }
 
       function 顯示經文載入中() {
@@ -841,6 +892,10 @@
           throw new Error('無法解析經文引用');
         }
 
+        if (!解析.json書卷) {
+          throw new Error('本地資料未支援此書卷');
+        }
+
         狀態.全文索引 = 索引;
 
         const 快取資料 = 經文快取.get(項.經文);
@@ -848,12 +903,32 @@
           return 快取資料;
         }
 
+        const 聖經索引 = await 讀取本地聖經資料();
+        const 書卷章索引 = 聖經索引.get(解析.json書卷);
+        if (!書卷章索引) {
+          throw new Error('本地資料找不到對應書卷');
+        }
+
         const 所有節 = [];
         for (const 區段 of 解析.區段) {
-          const 查詢 = 組合經文查詢(解析, 區段);
-          const 資料回應 = await 取經文回應(查詢);
-          if (資料回應 && Array.isArray(資料回應.record)) {
-            所有節.push(...資料回應.record);
+          for (let 章 = 區段.起章; 章 <= 區段.末章; 章 += 1) {
+            const 章節內容 = 書卷章索引.get(章) || [];
+            if (!章節內容.length) {
+              continue;
+            }
+
+            const 起節 = 章 === 區段.起章 ? 區段.起節 : 1;
+            const 末節 = 章 === 區段.末章 ? 區段.末節 : 999;
+
+            const 節列表 = 章節內容.filter((節) => {
+              const 節號 = Number(節.verse);
+              return 節號 >= 起節 && 節號 <= 末節;
+            }).map((節) => ({
+              sec: String(節.verse),
+              bible_text: String(節.text || '').replace(/\s+/g, ''),
+            }));
+
+            所有節.push(...節列表);
           }
         }
 
@@ -877,7 +952,7 @@
           容器.innerHTML = 轉換成頁面顯示(經文資料, 項.經文);
           綁定全文朗讀(項);
         } catch {
-          容器.innerHTML = '<div class="經文錯誤">無法載入全文經文，已自動切換後備來源仍未成功，請稍後再試。</div>';
+          容器.innerHTML = '<div class="經文錯誤">無法由本地資料載入全文經文，請確認 JSON 檔案存在並可讀取。</div>';
         }
       }
 

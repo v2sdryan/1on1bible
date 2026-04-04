@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="zh-HK">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>讀經計劃 2026</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --背景: #f5efe7;
+        --卡片: rgba(255, 255, 255, 0.9);
+        --卡片實: #ffffff;
+        --文字: #1f2937;
+        --次字: #6b7280;
+        --線: rgba(31, 41, 55, 0.1);
+        --主色: #b45309;
+        --主色深: #7c2d12;
+        --主色淡: rgba(180, 83, 9, 0.12);
+        --成功: #0f766e;
+        --陰影: 0 24px 70px rgba(17, 24, 39, 0.14);
+        --圓角大: 28px;
+        --圓角中: 20px;
+        --圓角細: 14px;
+      }
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Microsoft JhengHei", "PingFang TC", "Heiti TC", sans-serif;
+        color: var(--文字);
+        background:
+          radial-gradient(circle at top left, rgba(180, 83, 9, 0.12), transparent 35%),
+          radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 32%),
+          linear-gradient(180deg, #fbf8f2 0%, var(--背景) 100%);
+      }
+
+      button, a, input { font: inherit; }
+      a { color: inherit; text-decoration: none; }
+      button { cursor: pointer; }
+
+      .殼 {
+        width: min(1320px, calc(100% - 24px));
+        margin: 0 auto;
+      }
+
+      .頁首 {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-end;
+        padding: 28px 0 18px;
+      }
+
+      .標籤 {
+        margin: 0 0 10px;
+        color: var(--主色);
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      h1, h2, h3 {
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+
+      h1 {
+        font-size: clamp(2.3rem, 5vw, 4.6rem);
+        line-height: 0.96;
+        max-width: 10ch;
+      }
+
+      .引言 {
+        margin: 14px 0 0;
+        max-width: 58ch;
+        color: var(--次字);
+        line-height: 1.7;
+        font-size: 1.02rem;
+      }
+
+      .動作列 {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .按鈕, .按鈕主, .月標籤, .日標籤 {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 16px;
+        border: 1px solid var(--線);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+      }
+
+      .按鈕主 {
+        color: #fff;
+        background: linear-gradient(135deg, var(--主色), var(--主色深));
+        border-color: transparent;
+      }
+
+      .按鈕:hover, .按鈕主:hover, .卡片:hover, .日卡:hover {
+        transform: translateY(-1px);
+      }
+
+      .主版 {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
+        gap: 22px;
+        padding-bottom: 32px;
+      }
+
+      .卡片, .日卡, .詳情 {
+        background: var(--卡片);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--線);
+        box-shadow: var(--陰影);
+        border-radius: var(--圓角大);
+      }
+
+      .卡片 {
+        overflow: hidden;
+      }
+
+      .卡片內, .詳情內 {
+        padding: 22px;
+      }
+
+      .統計列 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .統計 {
+        background: rgba(255, 255, 255, 0.76);
+        border: 1px solid var(--線);
+        border-radius: var(--圓角中);
+        padding: 16px;
+      }
+
+      .統計 strong {
+        display: block;
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+      }
+
+      .統計 span, .細字, .章節, .狀態, .標題小 {
+        color: var(--次字);
+      }
+
+      .進度條 {
+        width: 100%;
+        height: 10px;
+        background: rgba(31, 41, 55, 0.08);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .進度填充 {
+        width: 0;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--主色), #d97706 55%, #f59e0b);
+        transition: width 220ms ease;
+      }
+
+      .月份區 {
+        display: grid;
+        gap: 16px;
+      }
+
+      .月份卡 {
+        padding: 18px;
+      }
+
+      .月份頭 {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .月份頭 h2 {
+        font-size: 1.35rem;
+      }
+
+      .月份內文 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .日卡 {
+        position: relative;
+        padding: 16px;
+        display: grid;
+        gap: 10px;
+        cursor: pointer;
+      }
+
+      .日卡.已選 {
+        border-color: rgba(180, 83, 9, 0.34);
+        box-shadow: 0 24px 60px rgba(180, 83, 9, 0.14);
+      }
+
+      .日卡頭 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .日號 {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 52px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: var(--主色淡);
+        color: var(--主色深);
+        font-weight: 800;
+      }
+
+      .經文 {
+        font-size: 1rem;
+        line-height: 1.55;
+        font-weight: 700;
+      }
+
+      .主題 {
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+
+      .已讀列 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--文字);
+        font-weight: 600;
+      }
+
+      .已讀列 input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--成功);
+      }
+
+      .詳情 {
+        position: sticky;
+        top: 20px;
+        height: fit-content;
+      }
+
+      .詳情空白 {
+        color: var(--次字);
+        line-height: 1.8;
+      }
+
+      .詳情標頭 {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 14px;
+      }
+
+      .詳情標頭 h2 {
+        font-size: 1.45rem;
+      }
+
+      .詳情正文 {
+        display: grid;
+        gap: 14px;
+      }
+
+      .詳情區塊 {
+        padding: 14px 16px;
+        border-radius: var(--圓角中);
+        background: rgba(255, 255, 255, 0.74);
+        border: 1px solid var(--線);
+      }
+
+      .經文按鈕 {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--主色深);
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .經文按鈕:hover {
+        text-decoration: underline;
+      }
+
+      .全文經文區 {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        border-radius: var(--圓角中);
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid var(--線);
+      }
+
+      .全文經文頭 {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .全文經文頭 h3 {
+        font-size: 1.05rem;
+        line-height: 1.4;
+      }
+
+      .全文經文容器 {
+        display: grid;
+        gap: 10px;
+      }
+
+      .節列 {
+        display: grid;
+        grid-template-columns: 38px 1fr;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .節號 {
+        text-align: right;
+        font-weight: 800;
+        color: var(--主色);
+        font-variant-numeric: tabular-nums;
+        padding-top: 1px;
+      }
+
+      .節文 {
+        line-height: 1.9;
+        color: var(--文字);
+        word-break: break-word;
+      }
+
+      .經文載入,
+      .經文錯誤 {
+        padding: 12px 14px;
+        border-radius: var(--圓角細);
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px dashed rgba(180, 83, 9, 0.24);
+        color: var(--次字);
+      }
+
+      .經文錯誤 {
+        color: #b42318;
+        border-style: solid;
+        border-color: rgba(180, 35, 24, 0.18);
+      }
+
+      .詳情區塊 .細字 {
+        display: block;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 0.72rem;
+      }
+
+      .朗讀列 {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .月標籤, .日標籤 {
+        min-height: 40px;
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      .月標籤.啟用 {
+        background: rgba(180, 83, 9, 0.12);
+        border-color: rgba(180, 83, 9, 0.26);
+      }
+
+      .提示 {
+        margin-top: 12px;
+        padding: 14px 16px;
+        border-radius: var(--圓角中);
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px dashed rgba(180, 83, 9, 0.26);
+        color: var(--次字);
+        line-height: 1.7;
+      }
+
+      @media (max-width: 1080px) {
+        .主版 { grid-template-columns: 1fr; }
+        .詳情 { position: static; }
+      }
+
+      @media (max-width: 900px) {
+        .月份內文 {
+          grid-template-columns: 1fr;
+        }
+
+        .月份卡,
+        .卡片內,
+        .詳情內 {
+          padding: 18px;
+        }
+
+        .統計列 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .頁首 { flex-direction: column; align-items: flex-start; }
+        .動作列 {
+          width: 100%;
+          justify-content: stretch;
+        }
+
+        .按鈕,
+        .按鈕主 {
+          flex: 1 1 calc(50% - 10px);
+        }
+
+        .按鈕主,
+        .按鈕 {
+          min-width: 0;
+        }
+
+        .日卡 {
+          padding: 14px;
+        }
+
+        .詳情標頭 {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .朗讀列 {
+          width: 100%;
+        }
+
+        .朗讀列 .按鈕,
+        .朗讀列 .按鈕主 {
+          flex: 1 1 100%;
+        }
+
+        .殼 { width: min(100% - 18px, 1320px); }
+        h1 { font-size: 2.2rem; }
+        .引言 {
+          font-size: 0.98rem;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .頁首 {
+          padding-top: 20px;
+        }
+
+        .卡片內,
+        .詳情內,
+        .月份卡 {
+          padding: 16px;
+        }
+
+        .標籤 {
+          letter-spacing: 0.14em;
+        }
+
+        h1 {
+          max-width: 12ch;
+        }
+
+        .日號,
+        .月標籤,
+        .日標籤 {
+          min-height: 36px;
+          padding: 6px 10px;
+          font-size: 0.92rem;
+        }
+
+        .經文 {
+          font-size: 0.98rem;
+        }
+
+        .主題 {
+          font-size: 0.92rem;
+        }
+
+        .詳情標頭 h2,
+        .月份頭 h2 {
+          font-size: 1.2rem;
+        }
+
+        .節列 {
+          grid-template-columns: 32px 1fr;
+          gap: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="殼 頁首">
+      <div>
+        <p class="標籤">讀經計劃</p>
+        <h1>按日閱讀，逐項點選</h1>
+        <p class="引言">每一日都會顯示短摘要；你可以直接點入詳情、勾選已讀、再用廣東話朗讀。所有顯示文字已改成中文。</p>
+      </div>
+      <div class="動作列">
+        <button class="按鈕" id="清除進度" type="button">重設進度</button>
+        <button class="按鈕主" id="朗讀按鈕" type="button">廣東話朗讀</button>
+      </div>
+    </header>
+
+    <main class="殼 主版">
+      <section class="卡片">
+        <div class="卡片內">
+          <div>
+            <h2>全部日程</h2>
+            <p class="標題小">你可以直接睇到每一日嘅短摘要，點一下就開啟詳情。</p>
+          </div>
+
+          <div class="統計列" style="margin-bottom: 16px;">
+            <div class="統計"><strong id="已讀數">0</strong><span>已讀日子</span></div>
+            <div class="統計"><strong id="總數">0</strong><span>總日數</span></div>
+            <div class="統計"><strong id="完成率">0%</strong><span>完成比例</span></div>
+          </div>
+
+          <div class="進度條" aria-hidden="true"><div class="進度填充" id="總進度"></div></div>
+          <p class="細字" style="margin: 10px 0 0;" id="進度文字"></p>
+
+          <div id="月份容器" class="月份區" style="margin-top: 18px;"></div>
+        </div>
+      </section>
+
+      <aside class="詳情" aria-live="polite">
+        <div class="詳情內" id="詳情容器">
+          <div class="詳情空白">
+            <h2>詳情</h2>
+            <p>點選左邊任何一日，就會顯示經文、主題同勾選狀態。</p>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <script>
+      const 資料 = [
+        { 月: 1, 日: 1, 經文: '馬可福音 1:1-8', 主題: '預備心迎見神' },
+        { 月: 1, 日: 2, 經文: '馬可福音 1:9-13', 主題: '靠著聖靈去面對邪惡者' },
+        { 月: 1, 日: 3, 經文: '馬可福音 1:14-20', 主題: '跟隨耶穌作得人的漁夫' },
+        { 月: 1, 日: 4, 經文: '馬可福音 1:21-34', 主題: '耶穌是主，勝過撒但與疾病' },
+        { 月: 1, 日: 5, 經文: '馬可福音 1:35-39', 主題: '耶穌也有自己的靈禱室' },
+        { 月: 1, 日: 6, 經文: '馬可福音 1:40-45', 主題: '耶穌願意行醫治' },
+        { 月: 1, 日: 7, 經文: '馬可福音 2:1-12', 主題: '眾人的禱告大有能力' },
+        { 月: 1, 日: 8, 經文: '馬可福音 2:13-22', 主題: '神的處事方式與人不同' },
+        { 月: 1, 日: 9, 經文: '馬可福音 2:23-3:6', 主題: '耶穌富憐憫之心，不要守成規' },
+        { 月: 1, 日: 10, 經文: '馬可福音 3:7-19', 主題: '耶穌呼召我們跟隨祂' },
+        { 月: 1, 日: 11, 經文: '馬可福音 3:20-30', 主題: '耶穌也遭人誤解和拒絕' },
+        { 月: 1, 日: 12, 經文: '馬可福音 3:31-35', 主題: '順服耶穌能使你更接近祂' },
+        { 月: 1, 日: 13, 經文: '馬可福音 4:1-20', 主題: '你要如何回應神的教導？' },
+        { 月: 1, 日: 14, 經文: '馬可福音 4:21-34', 主題: '到靈禱室去瞭解真理' },
+        { 月: 1, 日: 15, 經文: '馬可福音 4:34-41', 主題: '耶穌是你生活中的風浪之主' },
+        { 月: 1, 日: 16, 經文: '馬可福音 5:1-20', 主題: '主耶穌能釋放受困的捆綁' },
+        { 月: 1, 日: 17, 經文: '馬可福音 5:21-24, 35-43', 主題: '耶穌總是及時趕到' },
+        { 月: 1, 日: 18, 經文: '馬可福音 5:25-34', 主題: '當情況越來越糟，神依然有盼望' },
+        { 月: 1, 日: 19, 經文: '馬可福音 6:1-6', 主題: '不信的態度會阻礙神在我們生命的運作' },
+        { 月: 1, 日: 20, 經文: '馬可福音 6:7-13', 主題: '教導、醫治和釋放的事工' },
+        { 月: 1, 日: 21, 經文: '馬可福音 6:14-29', 主題: '為主而活需要付極大的代價' },
+        { 月: 1, 日: 22, 經文: '馬可福音 6:30-44', 主題: '耶穌餵飽人的局限' },
+        { 月: 1, 日: 23, 經文: '馬可福音 6:45-56', 主題: '憑信心而活的功課' },
+        { 月: 1, 日: 24, 經文: '馬可福音 7:1-13', 主題: '按神的命令行事，而非人的指示' },
+        { 月: 1, 日: 25, 經文: '馬可福音 7:14-23', 主題: '真正的污穢是從心裡發出的' },
+        { 月: 1, 日: 26, 經文: '馬可福音 7:24-30', 主題: '讓愛恆切' },
+        { 月: 1, 日: 27, 經文: '馬可福音 7:31-37', 主題: '神的作為叫人稱奇！' },
+        { 月: 1, 日: 28, 經文: '馬可福音 8:1-10', 主題: '耶穌既憐憫又體貼人的需要' },
+        { 月: 1, 日: 29, 經文: '馬可福音 8:11-21', 主題: '「你還不明白嗎？」' },
+        { 月: 1, 日: 30, 經文: '馬可福音 8:22-26', 主題: '神按其時間行事' },
+        { 月: 1, 日: 31, 經文: '馬可福音 8:27-38', 主題: '追求神的心意而不討人的喜悅' },
+        { 月: 2, 日: 1, 經文: '馬可福音 9:1-13', 主題: '別指示神做事，要聽祂的指示' },
+        { 月: 2, 日: 2, 經文: '馬可福音 9:14-29', 主題: '在信的人，凡事都能！' },
+        { 月: 2, 日: 3, 經文: '馬可福音 9:30-37', 主題: '神的方式：最小的為最大' },
+        { 月: 2, 日: 4, 經文: '馬可福音 9:38-50', 主題: '服事人，別絆倒他們' },
+        { 月: 2, 日: 5, 經文: '馬可福音 10:1-12', 主題: '離婚並非神的旨意' },
+        { 月: 2, 日: 6, 經文: '馬可福音 10:13-16', 主題: '以單純的信心信靠神' },
+        { 月: 2, 日: 7, 經文: '馬可福音 10:17-31', 主題: '別讓財富阻擋你得到神的美好旨意' },
+        { 月: 2, 日: 8, 經文: '馬可福音 10:32-45', 主題: '「服事人」的生活方式是門訓的關鍵' },
+        { 月: 2, 日: 9, 經文: '馬可福音 10:46-52', 主題: '別讓任何事影響你的信心' },
+        { 月: 2, 日: 10, 經文: '馬可福音 11:1-11', 主題: '敬拜王者耶穌' },
+        { 月: 2, 日: 11, 經文: '馬可福音 11:12-14, 20-26', 主題: '禱告時要期望得到應允' },
+        { 月: 2, 日: 12, 經文: '馬可福音 11:15-19', 主題: '我們要敬拜神，不是利用祂' },
+        { 月: 2, 日: 13, 經文: '馬可福音 11:27-33', 主題: '主耶穌的權柄是不容置疑的' },
+        { 月: 2, 日: 14, 經文: '馬可福音 12:1-12', 主題: '別拒絕了生命的真正房角石' },
+        { 月: 2, 日: 15, 經文: '馬可福音 12:13-17', 主題: '對神盡責，也當對人盡責' },
+        { 月: 2, 日: 16, 經文: '馬可福音 12:18-27', 主題: '誤解導致誤用' },
+        { 月: 2, 日: 17, 經文: '馬可福音 12:28-34', 主題: '基督徒的生活就是「愛神」和「愛人」' },
+        { 月: 2, 日: 18, 經文: '馬可福音 12:35-40', 主題: '真正的基督信仰在於態度，並非外表' },
+        { 月: 2, 日: 19, 經文: '馬可福音 12:41-44', 主題: '奉獻即使微不足道，神依然重視' },
+        { 月: 2, 日: 20, 經文: '馬可福音 13:1-2', 主題: '你會把生命寄託在最終將毀滅的事物上嗎？' },
+        { 月: 2, 日: 21, 經文: '馬可福音 13:3-27', 主題: '為主的再來作好準備' },
+        { 月: 2, 日: 22, 經文: '馬可福音 13:28-37', 主題: '要儆醒，因為你不知道基督何時再來' },
+        { 月: 2, 日: 23, 經文: '馬可福音 14:1-9', 主題: '耶穌配得最珍貴的奉獻' },
+        { 月: 2, 日: 24, 經文: '馬可福音 14:10-36', 主題: '別忘了耶穌在十架上為你成就的事' },
+        { 月: 2, 日: 25, 經文: '馬可福音 14:37-52', 主題: '在別人背叛你時，依然忠於神' },
+        { 月: 2, 日: 26, 經文: '馬可福音 14:53-72', 主題: '在被人誣告時，依然忠於神' },
+        { 月: 2, 日: 27, 經文: '馬可福音 15:1-32', 主題: '在受人奚落時，依然忠於神' },
+        { 月: 2, 日: 28, 經文: '馬可福音 15:33-39', 主題: '在神似乎離棄你時，你依然可以活在神的旨意中' },
+        { 月: 2, 日: 29, 經文: '馬可福音 15:40-47', 主題: '作耶穌的忠誠好友' },
+        { 月: 2, 日: 30, 經文: '馬可福音 16:1-13', 主題: '你信的是一位活著的救主' },
+        { 月: 2, 日: 31, 經文: '馬可福音 16:14-20', 主題: '把復活救主的福音與世人分享，阿們！' },
+      ];
+
+      const 進度鍵 = '讀經進度-v1';
+      const 經文快取 = new Map();
+      const 狀態 = {
+        選中: 0,
+        已讀: 讀取進度(),
+        全文索引: null,
+      };
+
+      const 月份容器 = document.getElementById('月份容器');
+      const 詳情容器 = document.getElementById('詳情容器');
+      const 朗讀按鈕 = document.getElementById('朗讀按鈕');
+      const 清除進度 = document.getElementById('清除進度');
+      const 已讀數 = document.getElementById('已讀數');
+      const 總數 = document.getElementById('總數');
+      const 完成率 = document.getElementById('完成率');
+      const 總進度 = document.getElementById('總進度');
+      const 進度文字 = document.getElementById('進度文字');
+
+      const 經文書卷對照 = {
+        '馬太福音': '太',
+        '馬可福音': '可',
+        '路加福音': '路',
+        '約翰福音': '約',
+        '使徒行傳': '徒',
+        '羅馬書': '羅',
+        '哥林多前書': '林前',
+        '哥林多後書': '林後',
+        '加拉太書': '加',
+        '以弗所書': '弗',
+        '腓立比書': '腓',
+        '歌羅西書': '西',
+        '帖撒羅尼迦前書': '帖前',
+        '帖撒羅尼迦後書': '帖後',
+        '提摩太前書': '提前',
+        '提摩太後書': '提後',
+        '提多書': '多',
+        '腓利門書': '門',
+        '希伯來書': '來',
+        '雅各書': '雅',
+        '彼得前書': '彼前',
+        '彼得後書': '彼後',
+        '約翰一書': '約一',
+        '約翰二書': '約二',
+        '約翰三書': '約三',
+        '猶大書': '猶',
+        '啟示錄': '啟',
+      };
+
+      function 讀取進度() {
+        try {
+          return JSON.parse(localStorage.getItem(進度鍵) || '{}');
+        } catch {
+          return {};
+        }
+      }
+
+      function 儲存進度() {
+        try {
+          localStorage.setItem(進度鍵, JSON.stringify(狀態.已讀));
+        } catch {}
+      }
+
+      function 已讀(索引) {
+        return Boolean(狀態.已讀[索引]);
+      }
+
+      function 計算統計() {
+        const 已讀數目 = 資料.filter((_, 索引) => 已讀(索引)).length;
+        const 總數目 = 資料.length;
+        const 百分比 = 總數目 ? Math.round((已讀數目 / 總數目) * 100) : 0;
+        return { 已讀數目, 總數目, 百分比 };
+      }
+
+      function 更新統計() {
+        const { 已讀數目, 總數目, 百分比 } = 計算統計();
+        已讀數.textContent = 已讀數目;
+        總數.textContent = 總數目;
+        完成率.textContent = `${百分比}%`;
+        總進度.style.width = `${百分比}%`;
+        進度文字.textContent = `已完成 ${已讀數目} 日，共 ${總數目} 日`;
+      }
+
+      function 取得月份資料(月) {
+        return 資料.filter((項) => 項.月 === 月);
+      }
+
+      function 解析經文引用(經文) {
+        const 匹配 = 經文.match(/^(.+?)\s+(.+)$/);
+        if (!匹配) {
+          return null;
+        }
+
+        const 書卷 = 匹配[1].trim();
+        const 範圍字串 = 匹配[2].replace(/\s+/g, '');
+        const api書卷 = 經文書卷對照[書卷] || 書卷;
+        const 區段 = 範圍字串.split(',').map((段) => 段.trim()).filter(Boolean).map((段) => {
+          const [起點, 終點原] = 段.split('-');
+          const [起章, 起節] = 起點.split(':').map((值) => Number(值));
+          let 末章 = 起章;
+          let 末節 = 起節;
+
+          if (終點原) {
+            if (終點原.includes(':')) {
+              const [章, 節] = 終點原.split(':').map((值) => Number(值));
+              末章 = 章;
+              末節 = 節;
+            } else {
+              末節 = Number(終點原);
+            }
+          }
+
+          return { 起章, 起節, 末章, 末節 };
+        });
+
+        return { 書卷, api書卷, 範圍字串, 區段 };
+      }
+
+      function 組合經文查詢(引用, 區段) {
+        if (區段.起章 === 區段.末章) {
+          return `${引用.api書卷}${區段.起章}:${區段.起節}-${區段.末節}`;
+        }
+
+        return `${引用.api書卷}${區段.起章}:${區段.起節}-${區段.末章}:${區段.末節}`;
+      }
+
+      function 轉換成頁面顯示(經文資料, 引用文字) {
+        const 節列 = 經文資料.map((節) => `
+          <div class="節列">
+            <div class="節號">${escapeHtml(節.sec)}</div>
+            <div class="節文">${escapeHtml(節.bible_text)}</div>
+          </div>
+        `).join('');
+
+        return `
+          <section class="全文經文區">
+            <div class="全文經文頭">
+              <div>
+                <p class="細字">全文經文</p>
+                <h3>${escapeHtml(引用文字)}</h3>
+              </div>
+              <button class="按鈕" id="朗讀全文">廣東話朗讀全文</button>
+            </div>
+            <div class="全文經文容器">${節列}</div>
+          </section>
+        `;
+      }
+
+      function 顯示經文載入中() {
+        const 容器 = document.getElementById('全文經文容器');
+        if (!容器) return;
+        容器.innerHTML = '<div class="經文載入">載入全文經文中...</div>';
+      }
+
+      async function 載入全文經文(索引) {
+        const 項 = 資料[索引];
+        if (!項) return;
+
+        const 容器 = document.getElementById('全文經文容器');
+        if (!容器) return;
+
+        const 解析 = 解析經文引用(項.經文);
+        if (!解析) {
+          容器.innerHTML = '<div class="經文錯誤">無法解析經文引用。</div>';
+          return;
+        }
+
+        狀態.全文索引 = 索引;
+
+        const 快取資料 = 經文快取.get(項.經文);
+        if (快取資料) {
+          容器.innerHTML = 轉換成頁面顯示(快取資料, 項.經文);
+          綁定全文朗讀(項);
+          return;
+        }
+
+        容器.innerHTML = '<div class="經文載入">載入全文經文中...</div>';
+
+        try {
+          const 所有節 = [];
+          for (const 區段 of 解析.區段) {
+            const 查詢 = 組合經文查詢(解析, 區段);
+            const 回應 = await fetch(`https://bible.fhl.net/json/qsb.php?qstr=${encodeURIComponent(查詢)}&version=unv&gb=0`);
+            const 資料回應 = await 回應.json();
+
+            if (資料回應 && Array.isArray(資料回應.record)) {
+              所有節.push(...資料回應.record);
+            }
+          }
+
+          if (!所有節.length) {
+            容器.innerHTML = '<div class="經文錯誤">搵唔到對應全文經文。</div>';
+            return;
+          }
+
+          經文快取.set(項.經文, 所有節);
+          容器.innerHTML = 轉換成頁面顯示(所有節, 項.經文);
+          綁定全文朗讀(項);
+        } catch (錯誤) {
+          容器.innerHTML = '<div class="經文錯誤">無法載入全文經文，請稍後再試。</div>';
+        }
+      }
+
+      function 綁定全文朗讀(項) {
+        const 按鈕 = document.getElementById('朗讀全文');
+        if (!按鈕) return;
+
+        按鈕.addEventListener('click', () => {
+          const 容器 = document.querySelector('.全文經文容器');
+          const 內容 = 容器 ? Array.from(容器.querySelectorAll('.節列')).map((節) => {
+            const 節號 = 節.querySelector('.節號')?.textContent?.trim() || '';
+            const 節文 = 節.querySelector('.節文')?.textContent?.trim() || '';
+            return 節號 && 節文 ? `第${節號}節，${節文}` : 節文;
+          }).filter(Boolean).join('。') : `${項.經文}。${項.主題}`;
+
+          朗讀內容(內容);
+        });
+      }
+
+      function 分組月份() {
+        const 月份 = [1, 2];
+        月份容器.innerHTML = 月份.map((月) => {
+          const 月資料 = 取得月份資料(月);
+          return `
+            <section class="卡片 月份卡">
+              <div class="月份頭">
+                <div>
+                  <h2>第 ${月} 個月</h2>
+                  <p class="標題小">共 ${月資料.length} 日，全部卡片都可以點選。</p>
+                </div>
+                <span class="月標籤 啟用">${月} 月</span>
+              </div>
+              <div class="月份內文">
+                ${月資料.map((項, 月內索引) => {
+                  const 索引 = 資料.indexOf(項);
+                  return `
+                    <article class="日卡 ${已讀(索引) ? '已選' : ''}" data-索引="${索引}" tabindex="0" role="button" aria-label="第 ${項.日} 日，${項.經文}，${項.主題}">
+                      <div class="日卡頭">
+                        <span class="日號">第 ${項.日} 日</span>
+                        <span class="狀態">${已讀(索引) ? '已讀' : '未讀'}</span>
+                      </div>
+                      <div class="經文">${項.經文}</div>
+                      <div class="主題">${項.主題}</div>
+                      <label class="已讀列" onclick="event.stopPropagation()">
+                        <input type="checkbox" ${已讀(索引) ? 'checked' : ''} data-checkbox="${索引}" />
+                        <span>標示已讀</span>
+                      </label>
+                    </article>
+                  `;
+                }).join('')}
+              </div>
+            </section>
+          `;
+        }).join('');
+      }
+
+      function 顯示詳情(索引) {
+        const 項 = 資料[索引];
+        if (!項) return;
+        狀態.選中 = 索引;
+
+        document.querySelectorAll('.日卡').forEach((卡) => {
+          卡.classList.toggle('已選', Number(卡.dataset.索引) === 索引);
+        });
+
+        const 前一項 = 資料[索引 - 1] || null;
+        const 後一項 = 資料[索引 + 1] || null;
+
+        詳情容器.innerHTML = `
+          <div class="詳情標頭">
+            <div>
+              <p class="標籤" style="margin-bottom: 8px;">詳情</p>
+              <h2>第 ${項.日} 日</h2>
+              <p class="標題小">${項.經文}</p>
+            </div>
+            <span class="日標籤">${已讀(索引) ? '已讀' : '未讀'}</span>
+          </div>
+          <div class="詳情正文">
+            <div class="詳情區塊">
+              <span class="細字">經文</span>
+              <button class="經文按鈕" id="全文經文按鈕" type="button">${項.經文}</button>
+              <div class="標題小" style="margin-top: 6px;">點一下就會顯示全文經文</div>
+            </div>
+            <div class="詳情區塊">
+              <span class="細字">主題</span>
+              <strong>${項.主題}</strong>
+            </div>
+            <div class="詳情區塊">
+              <span class="細字">動作</span>
+              <label class="已讀列" style="margin-top: 4px;">
+                <input type="checkbox" ${已讀(索引) ? 'checked' : ''} id="詳情已讀" />
+                <span>我已經讀咗</span>
+              </label>
+            </div>
+            <div class="詳情區塊">
+              <span class="細字">朗讀</span>
+              <div class="朗讀列">
+                <button class="按鈕主" id="詳情朗讀">廣東話朗讀</button>
+                <button class="按鈕" id="停止朗讀">停止朗讀</button>
+              </div>
+            </div>
+            <div class="詳情區塊">
+              <span class="細字">全文</span>
+              <div id="全文經文容器"></div>
+            </div>
+            <div class="詳情區塊">
+              <span class="細字">上一日 / 下一日</span>
+              <div class="朗讀列">
+                ${前一項 ? `<button class="按鈕" data-跳轉="${索引 - 1}">上一日</button>` : ''}
+                ${後一項 ? `<button class="按鈕" data-跳轉="${索引 + 1}">下一日</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+
+        const 詳情已讀 = document.getElementById('詳情已讀');
+        const 詳情朗讀 = document.getElementById('詳情朗讀');
+        const 停止朗讀 = document.getElementById('停止朗讀');
+        const 全文經文按鈕 = document.getElementById('全文經文按鈕');
+
+        詳情已讀.addEventListener('change', () => 切換已讀(索引, 詳情已讀.checked));
+        詳情朗讀.addEventListener('click', () => 朗讀內容(`${項.經文}。${項.主題}`));
+        停止朗讀.addEventListener('click', 停止朗讀聲音);
+        全文經文按鈕.addEventListener('click', () => {
+          顯示經文載入中();
+          載入全文經文(索引);
+        });
+
+        詳情容器.querySelectorAll('[data-跳轉]').forEach((按鈕) => {
+          按鈕.addEventListener('click', () => 顯示詳情(Number(按鈕.dataset.跳轉)));
+        });
+
+        if (狀態.全文索引 === 索引) {
+          載入全文經文(索引);
+        }
+      }
+
+      function 切換已讀(索引, 值) {
+        狀態.已讀[索引] = 值;
+        if (!值) delete 狀態.已讀[索引];
+        儲存進度();
+        渲染();
+        顯示詳情(索引);
+      }
+
+      function 停止朗讀聲音() {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      }
+
+      function 取得廣東話聲線() {
+        const 聲線 = window.speechSynthesis?.getVoices?.() || [];
+        if (!聲線.length) return null;
+
+        const 檢查 = [
+          (聲) => /yue/i.test(聲.lang) || /cantonese|粵|廣東/i.test(聲.name),
+          (聲) => /zh-HK/i.test(聲.lang),
+          (聲) => /^zh/i.test(聲.lang),
+        ];
+
+        for (const 規則 of 檢查) {
+          const 找到 = 聲線.find(規則);
+          if (找到) return 找到;
+        }
+
+        return 聲線[0];
+      }
+
+      function 朗讀內容(文字) {
+        if (!('speechSynthesis' in window)) {
+          alert('你嘅瀏覽器未支援朗讀功能。');
+          return;
+        }
+
+        停止朗讀聲音();
+        const 句子 = new SpeechSynthesisUtterance(文字);
+        句子.lang = 'zh-HK';
+        句子.rate = 0.95;
+        句子.pitch = 1;
+        句子.volume = 1;
+        const 聲線 = 取得廣東話聲線();
+        if (聲線) 句子.voice = 聲線;
+        window.speechSynthesis.speak(句子);
+      }
+
+      function 重設進度() {
+        狀態.已讀 = {};
+        儲存進度();
+        渲染();
+        顯示詳情(狀態.選中);
+      }
+
+      function 渲染() {
+        分組月份();
+        更新統計();
+
+        月份容器.querySelectorAll('.日卡').forEach((卡) => {
+          卡.addEventListener('click', () => 顯示詳情(Number(卡.dataset.索引)));
+          卡.addEventListener('keydown', (事件) => {
+            if (事件.key === 'Enter' || 事件.key === ' ') {
+              事件.preventDefault();
+              顯示詳情(Number(卡.dataset.索引));
+            }
+          });
+        });
+
+        月份容器.querySelectorAll('.經文按鈕[data-全文索引]').forEach((按鈕) => {
+          按鈕.addEventListener('click', (事件) => {
+            事件.stopPropagation();
+            const 索引 = Number(按鈕.dataset.全文索引);
+            顯示詳情(索引);
+            顯示經文載入中();
+            載入全文經文(索引);
+          });
+        });
+
+        月份容器.querySelectorAll('input[data-checkbox]').forEach((方塊) => {
+          方塊.addEventListener('change', (事件) => {
+            事件.stopPropagation();
+            切換已讀(Number(方塊.dataset.checkbox), 方塊.checked);
+          });
+        });
+      }
+
+      清除進度.addEventListener('click', 重設進度);
+      朗讀按鈕.addEventListener('click', () => {
+        const 項 = 資料[狀態.選中];
+        if (!項) {
+          alert('請先選一日。');
+          return;
+        }
+        朗讀內容(`${項.經文}。${項.主題}`);
+      });
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.addEventListener('voiceschanged', () => {});
+      }
+
+      渲染();
+      顯示詳情(0);
+    </script>
+  </body>
+</html>

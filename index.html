@@ -856,7 +856,10 @@
                 <p class="細字">全文經文</p>
                 <h3>${escapeHtml(引用文字)}</h3>
               </div>
-              <button class="按鈕" id="朗讀全文">廣東話朗讀全文</button>
+              <div class="朗讀列">
+                <button class="按鈕 朗讀全文按鈕">廣東話朗讀全文</button>
+                <button class="按鈕 停止全文按鈕">🛑 停止</button>
+              </div>
             </div>
             <div class="全文經文容器">${節列}</div>
           </section>
@@ -959,7 +962,7 @@
         try {
           const 經文資料 = await 取得全文經文資料(索引);
           容器.innerHTML = 轉換成頁面顯示(經文資料, 項.經文);
-          綁定全文朗讀(項);
+          綁定全文朗讀(項, 容器);
         } catch (e) {
           容器.innerHTML = `<div class="經文錯誤">${e.message}</div>`;
         }
@@ -969,20 +972,26 @@
         載入全文經文到容器(索引, `卡片全文容器-${索引}`);
       }
 
-      function 綁定全文朗讀(項) {
-        const 按鈕 = document.getElementById('朗讀全文');
-        if (!按鈕) return;
+      function 綁定全文朗讀(項, 容器) {
+        if (!容器) return;
+        const 朗讀按鈕 = 容器.querySelector('.朗讀全文按鈕');
+        const 停止按鈕 = 容器.querySelector('.停止全文按鈕');
 
-        按鈕.addEventListener('click', () => {
-          const 容器 = document.querySelector('.全文經文容器');
-          const 內容 = 容器 ? Array.from(容器.querySelectorAll('.節列')).map((節) => {
-            const 節號 = 節.querySelector('.節號')?.textContent?.trim() || '';
-            const 節文 = 節.querySelector('.節文')?.textContent?.trim() || '';
-            return 節號 && 節文 ? `第${節號}節，${節文}` : 節文;
-          }).filter(Boolean).join('。') : `${項.經文}。${項.主題}`;
+        if (朗讀按鈕) {
+          朗讀按鈕.addEventListener('click', () => {
+            const 內容 = 容器.querySelector('.全文經文容器') ? Array.from(容器.querySelectorAll('.節列')).map((節) => {
+              const 節號 = 節.querySelector('.節號')?.textContent?.trim() || '';
+              const 節文 = 節.querySelector('.節文')?.textContent?.trim() || '';
+              return 節號 && 節文 ? `第${節號}節，${節文}` : 節文;
+            }).filter(Boolean).join('。') : `${項.經文}。${項.主題}`;
 
-          朗讀內容(內容);
-        });
+            朗讀內容(內容);
+          });
+        }
+        
+        if (停止按鈕) {
+          停止按鈕.addEventListener('click', 停止朗讀聲音);
+        }
       }
 
       function 分組月份() {

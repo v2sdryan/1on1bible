@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>讀經計劃 2026</title>
+    <script src="ChiUn.js"></script>
     <style>
       :root {
         color-scheme: light;
@@ -830,6 +831,15 @@
         return `${引用.api書卷}${區段.起章}:${區段.起節}-${區段.末章}:${區段.末節}`;
       }
 
+      function escapeHtml(unsafe) {
+        return (unsafe || '').toString()
+           .replace(/&/g, "&amp;")
+           .replace(/</g, "&lt;")
+           .replace(/>/g, "&gt;")
+           .replace(/"/g, "&quot;")
+           .replace(/'/g, "&#039;");
+      }
+
       function 轉換成頁面顯示(經文資料, 引用文字) {
         const 節列 = 經文資料.map((節) => `
           <div class="節列">
@@ -857,32 +867,13 @@
           return 聖經資料快取;
         }
 
-        const 候選檔名 = ['chiun.json', 'ChiUn.json', 'ChiUn%20(1).json', 'ChiUn (1).json'];
-        let 原始 = null;
-        let 最後錯誤 = '';
-
-        for (const 檔名 of 候選檔名) {
-          try {
-            const 回應 = await fetch(檔名);
-            if (!回應.ok) {
-              最後錯誤 = `${檔名} HTTP ${回應.status}`;
-              continue;
-            }
-
-            原始 = await 回應.json();
-            break;
-          } catch (錯誤) {
-            最後錯誤 = 錯誤 instanceof Error ? 錯誤.message : '未知錯誤';
-          }
-        }
-
-        if (!原始) {
-          throw new Error(`本地聖經資料檔無法讀取：${最後錯誤}`);
+        if (typeof 聖經原始資料 === 'undefined') {
+          throw new Error('無法讀取本地聖經資料，請確認 ChiUn.js 是否存在並成功載入了。');
         }
 
         const 索引 = new Map();
 
-        for (const 書卷 of (原始.books || [])) {
+        for (const 書卷 of (聖經原始資料.books || [])) {
           const 章索引 = new Map();
           for (const 章 of (書卷.chapters || [])) {
             章索引.set(Number(章.chapter), 章.verses || []);
@@ -968,8 +959,8 @@
           const 經文資料 = await 取得全文經文資料(索引);
           容器.innerHTML = 轉換成頁面顯示(經文資料, 項.經文);
           綁定全文朗讀(項);
-        } catch {
-          容器.innerHTML = '<div class="經文錯誤">無法由本地資料載入全文經文，請確認 JSON 檔案存在並可讀取。</div>';
+        } catch (e) {
+          容器.innerHTML = `<div class="經文錯誤">${e.message}</div>`;
         }
       }
 

@@ -535,6 +535,7 @@
       <div class="動作列">
         <button class="按鈕" id="清除進度" type="button">重設進度</button>
         <button class="按鈕主" id="朗讀按鈕" type="button">廣東話朗讀</button>
+        <button class="按鈕" id="全域停止朗讀" type="button">🛑 停止</button>
       </div>
     </header>
 
@@ -1064,7 +1065,7 @@
               <span class="細字">朗讀</span>
               <div class="朗讀列">
                 <button class="按鈕主" id="詳情朗讀">廣東話朗讀</button>
-                <button class="按鈕" id="停止朗讀">停止朗讀</button>
+                <button class="按鈕" id="停止朗讀">🛑 停止朗讀</button>
               </div>
             </div>
             <div class="詳情區塊">
@@ -1203,6 +1204,8 @@
       }
 
       清除進度.addEventListener('click', 重設進度);
+      const 全域停止朗讀 = document.getElementById('全域停止朗讀');
+      
       朗讀按鈕.addEventListener('click', () => {
         const 項 = 資料[狀態.選中];
         if (!項) {
@@ -1211,6 +1214,7 @@
         }
         朗讀內容(`${項.經文}。${項.主題}`);
       });
+      全域停止朗讀.addEventListener('click', 停止朗讀聲音);
 
       if ('speechSynthesis' in window) {
         window.speechSynthesis.addEventListener('voiceschanged', () => {});
